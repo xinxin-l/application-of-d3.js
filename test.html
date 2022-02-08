@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="d3.js"></script>
+    <title>Document</title>
+    <link rel="stylesheet" href="./under.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: rgb(253, 233, 235);
+            background: url(b.jpg);
+            /*background-size:75% 50%;*/
+            /*background-position:top50px right 80px,40px 40px;*/
+            /*background-repeat:no-repeat; */
+            /*background-size: 100% 100%; */
+        }
+
+        .out {
+            margin: 0 auto;
+            margin-bottom: 30px;
+            padding-bottom: 40px;
+            width: 96vw;
+            mix-height: 240vh;
+            border-radius: 30px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            background-color: rgb(0, 0, 0, .5);
+        }
+
+        .div-inline {
+            display: inline
+        }
+    </style>
+    <script>
+        function djmgt(i) {
+            d3.select("#count_").selectAll('#g1').remove();
+            d3.select("#count2").selectAll('#g1').remove();
+            d3.csv("time_cl.csv").then(function (csvdata) {
+                drawBarChart(csvdata.filter(function (d) { return d.type == type[i] })
+                    .filter(function (d) { return d.player == 'messi' })
+                )
+
+                drawBarChart2(csvdata.filter(function (d) { return d.type == type[i] })
+                    .filter(function (d) { return d.player == 'ronaldo' })
+                )
+            })
+            if (is_clickm) {
+                document.getElementById("childframe").contentWindow.drawpicture2(player[0], type[i]);
+            } else if (is_clickr) {
+                document.getElementById("childframe").contentWindow.drawpicture2(player[1], type[i]);
+            } else {
+                document.getElementById("childframe").contentWindow.drawpicture2(player[2], type[i]);
+            }
+        }
+        //这个函数是将data对应的条形图现实在网页中
+        function drawBarChart(data) {
+            d3.select("#count_").selectAll('#g1').remove();
+            var array = [
+                { time: 0, count: 0 },
+                { time: 5, count: 0 },
+                { time: 10, count: 0 },
+                { time: 15, count: 0 },
+                { time: 20, count: 0 },
+                { time: 25, count: 0 },
+                { time: 30, count: 0 },
+                { time: 35, count: 0 },
+                { time: 40, count: 0 },
+                { time: 45, count: 0 },
+                { time: 50, count: 0 },
+                { time: 55, count: 0 },
+                { time: 60, count: 0 },
+                { time: 65, count: 0 },
+                { time: 70, count: 0 },
+                { time: 75, count: 0 },
+                { time: 80, count: 0 },
+                { time: 85, count: 0 },
+                { time: 90, count: 0 },
+                { time: 95, count: 0 },
+                { time: 100, count: 0 },
+                { time: 105, count: 0 },
+                { time: 110, count: 0 },
+                { time: 115, count: 0 },
+                { time: '上半场加时', count: 0 },
+                { time: '下半场加时', count: 0 }
+            ]
+            for (let i = 0; i < array.length; i++) {
+                for (let j = 0; j < data.length; j++) {
+                    if (array[i].time == data[j].time) {
+                        array[i].count = data[j].count;
+                    }
+                }
+            }
+            //设置svg
+
+            const margin = { top: 0, right: 0, bottom: 0, left: 0 }, //确定内边距
+                containerDimensions = { height: 150, width: 60 }, //确定整个svg的大小
+                chartDimensions = { //根据svg的大小和内边距确定条形图的大小
+                    height: containerDimensions.height - margin.top - margin.bottom,
+                    width: containerDimensions.width - margin.left - margin.right
+                }
+            //获得svg
+            const svg = d3.select('#count_') //获得网页中svg元素
+                .attr('width', containerDimensions.width) //设置svg的高
+                .attr('height', containerDimensions.height) //设置svg的宽
+            //.style('background', 'white') //设置背景颜色
+
+            const group = svg.append('g') //改变后面绘制的坐标原点
+                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                .attr('id', 'g1');
+
+            //设置比例尺
+            const y = d3.scaleLinear()
+                .domain([0, 15])
+                .nice()//扩展定义域的两段使其都为整数，比如[1.0021, 2.999] => [1, 3]
+                .range([0, chartDimensions.width])
+
+            const x = d3.scaleBand()
+                .domain(array.map(d => d.time))
+                .range([chartDimensions.height, 0])
+                .padding(0.2)  //设置条之间的间距，通过改变每一个条的宽度来实现
+
+            //绘制条形
+            const bars = group.selectAll('rect') //选择关联的svg元素
+                .data(array) //需要关联的数据
+                .join('rect') //获得绑定了数据的rect元素
+            bars.attr('x', d => 0) //设置rect的x坐标
+                .attr('y', d => x(d.time))//设置rect的y坐标
+                .attr('height', x.bandwidth())//设置rect的width
+                .attr('width', d => y(d.count) - y(0))//设置rect的width, 已经被比例尺计算好了，通过x.bandwidth()获得
+                .attr('fill', 'yellow') //设置颜色
+                .on("mouseover", function (d, i) {
+                    d3.select(this)
+                        .attr("fill", "rgb(212, 200, 210)")
+
+                })
+                .on("mouseout", function (d, i) {
+                    d3.select(this)
+                        .transition()
+                        .duration(500)
+                        .attr("fill", "yellow");
+                })
+            bars.append("title")
+                .text(d => data[0].player + "在" + d.time + "分钟之后的五分钟内以" + data[0].type + "的方式进球总数为" + d.count);
+        }
+        function drawBarChart2(data) {
+            d3.select("#count2").selectAll('#g1').remove();
+
+            var array2 = [
+                { time: 0, count: 0 },
+                { time: 5, count: 0 },
+                { time: 10, count: 0 },
+                { time: 15, count: 0 },
+                { time: 20, count: 0 },
+                { time: 25, count: 0 },
+                { time: 30, count: 0 },
+                { time: 35, count: 0 },
+                { time: 40, count: 0 },
+                { time: 45, count: 0 },
+                { time: 50, count: 0 },
+                { time: 55, count: 0 },
+                { time: 60, count: 0 },
+                { time: 65, count: 0 },
+                { time: 70, count: 0 },
+                { time: 75, count: 0 },
+                { time: 80, count: 0 },
+                { time: 85, count: 0 },
+                { time: 90, count: 0 },
+                { time: 95, count: 0 },
+                { time: 100, count: 0 },
+                { time: 105, count: 0 },
+                { time: 110, count: 0 },
+                { time: 115, count: 0 },
+                { time: '上半场加时', count: 0 },
+                { time: '下半场加时', count: 0 }
+            ]
+            for (let i = 0; i < array2.length; i++) {
+                for (let j = 0; j < data.length; j++) {
+                    if (array2[i].time == data[j].time) {
+                        array2[i].count = data[j].count;
+                    }
+                }
+            }
+            //设置svg
+
+            const margin = { top: 0, right: 0, bottom: 0, left: 0 }, //确定内边距
+                containerDimensions = { height: 150, width: 60 }, //确定整个svg的大小
+                chartDimensions = { //根据svg的大小和内边距确定条形图的大小
+                    height: containerDimensions.height - margin.top - margin.bottom,
+                    width: containerDimensions.width - margin.left - margin.right
+                }
+            //获得svg
+            const svg = d3.select('#count2') //获得网页中svg元素
+                .attr('width', containerDimensions.width) //设置svg的高
+                .attr('height', containerDimensions.height) //设置svg的宽
+            //.style('background', 'white') //设置背景颜色
+
+            const group = svg.append('g') //改变后面绘制的坐标原点
+                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                .attr('id', 'g1');
+
+            //设置比例尺
+            const y = d3.scaleLinear()
+                .domain([0, 15])
+                .nice()//扩展定义域的两段使其都为整数，比如[1.0021, 2.999] => [1, 3]
+                .range([0, chartDimensions.width])
+
+            const x = d3.scaleBand()
+                .domain(array2.map(d => d.time))
+                .range([chartDimensions.height, 0])
+                .padding(0.2)  //设置条之间的间距，通过改变每一个条的宽度来实现
+
+            //绘制条形
+            const bars = group.selectAll('rect') //选择关联的svg元素
+                .data(array2) //需要关联的数据
+                .join('rect') //获得绑定了数据的rect元素
+            bars.attr('x', d => chartDimensions.width - y(d.count)) //设置rect的x坐标
+                .attr('y', d => x(d.time))//设置rect的y坐标
+                .attr('height', x.bandwidth())//设置rect的width, 已经被比例尺计算好了，通过x.bandwidth()获得
+                .attr('width', d => y(d.count))
+                .attr('fill', 'white') //设置颜色
+                .on("mouseover", function (d, i) {
+                    d3.select(this)
+                        .attr("fill", "rgb(212, 200, 210)")
+
+                })
+                .on("mouseout", function (d, i) {
+                    d3.select(this)
+                        .transition()
+                        .duration(500)
+                        .attr("fill", "white");
+                })
+            bars.append("title")
+                .text(d => data[0].player + "在" + d.time + "分钟之后的五分钟内以" + data[0].type + "的方式进球总数为" + d.count);
+        }
+        function drawBarChart_ronaldo(data) {
+            d3.select("#count2").selectAll('#g1').remove();
+            var array2 = [
+                { time: 0, count: 0 },
+                { time: 5, count: 0 },
+                { time: 10, count: 0 },
+                { time: 15, count: 0 },
+                { time: 20, count: 0 },
+                { time: 25, count: 0 },
+                { time: 30, count: 0 },
+                { time: 35, count: 0 },
+                { time: 40, count: 0 },
+                { time: 45, count: 0 },
+                { time: 50, count: 0 },
+                { time: 55, count: 0 },
+                { time: 60, count: 0 },
+                { time: 65, count: 0 },
+                { time: 70, count: 0 },
+                { time: 75, count: 0 },
+                { time: 80, count: 0 },
+                { time: 85, count: 0 },
+                { time: 90, count: 0 },
+                { time: 95, count: 0 },
+                { time: 100, count: 0 },
+                { time: 105, count: 0 },
+                { time: 110, count: 0 },
+                { time: 115, count: 0 },
+                { time: '上半场加时', count: 0 },
+                { time: '下半场加时', count: 0 }
+            ]
+            for (let i = 0; i < array2.length; i++) {
+                for (let j = 0; j < data.length; j++) {
+                    if (array2[i].time == data[j].time) {
+                        array2[i].count = data[j].count;
+                    }
+                }
+            }
+            //设置svg
+
+            const margin = { top: 0, right: 0, bottom: 0, left: 0 }, //确定内边距
+                containerDimensions = { height: 150, width: 60 }, //确定整个svg的大小
+                chartDimensions = { //根据svg的大小和内边距确定条形图的大小
+                    height: containerDimensions.height - margin.top - margin.bottom,
+                    width: containerDimensions.width - margin.left - margin.right
+                }
+            //获得svg
+            const svg = d3.select('#count2') //获得网页中svg元素
+                .attr('width', containerDimensions.width) //设置svg的高
+                .attr('height', containerDimensions.height) //设置svg的宽
+            //.style('background', 'white') //设置背景颜色
+
+            const group = svg.append('g') //改变后面绘制的坐标原点
+                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                .attr('id', 'g1');
+
+            //设置比例尺
+            const y = d3.scaleLinear()
+                .domain([0, 15])
+                .nice()//扩展定义域的两段使其都为整数，比如[1.0021, 2.999] => [1, 3]
+                .range([0, chartDimensions.width])
+
+            const x = d3.scaleBand()
+                .domain(array2.map(d => d.time))
+                .range([chartDimensions.height, 0])
+                .padding(0.2)  //设置条之间的间距，通过改变每一个条的宽度来实现
+
+            //绘制条形
+            const bars = group.selectAll('rect') //选择关联的svg元素
+                .data(array2) //需要关联的数据
+                .join('rect') //获得绑定了数据的rect元素
+            bars.attr('x', d => chartDimensions.width - y(d.count)) //设置rect的x坐标
+                .attr('y', d => x(d.time))//设置rect的y坐标
+                .attr('height', x.bandwidth())//设置rect的width, 已经被比例尺计算好了，通过x.bandwidth()获得
+                .attr('width', d => y(d.count))
+                .attr('fill', 'white') //设置颜色
+                .on("mouseover", function (d, i) {
+                    d3.select(this)
+                        .attr("fill", "rgb(212, 200, 210)")
+
+                })
+                .on("mouseout", function (d, i) {
+                    d3.select(this)
+                        .transition()
+                        .duration(500)
+                        .attr("fill", "white");
+                })
+            bars.append("title")
+                .text(d => data[0].player + "在" + d.time + "分钟之后的五分钟内进球总数为" + d.count);
+        }
+        function drawBarChart_messi(data) {
+            d3.select("#count_").selectAll('#g1').remove();
+            var array = [
+                { time: 0, count: 0 },
+                { time: 5, count: 0 },
+                { time: 10, count: 0 },
+                { time: 15, count: 0 },
+                { time: 20, count: 0 },
+                { time: 25, count: 0 },
+                { time: 30, count: 0 },
+                { time: 35, count: 0 },
+                { time: 40, count: 0 },
+                { time: 45, count: 0 },
+                { time: 50, count: 0 },
+                { time: 55, count: 0 },
+                { time: 60, count: 0 },
+                { time: 65, count: 0 },
+                { time: 70, count: 0 },
+                { time: 75, count: 0 },
+                { time: 80, count: 0 },
+                { time: 85, count: 0 },
+                { time: 90, count: 0 },
+                { time: 95, count: 0 },
+                { time: 100, count: 0 },
+                { time: 105, count: 0 },
+                { time: 110, count: 0 },
+                { time: 115, count: 0 },
+                { time: '上半场加时', count: 0 },
+                { time: '下半场加时', count: 0 }
+            ]
+            for (let i = 0; i < array.length; i++) {
+                for (let j = 0; j < data.length; j++) {
+                    if (array[i].time == data[j].time) {
+                        array[i].count = data[j].count;
+                    }
+                }
+            }
+            //设置svg
+
+            const margin = { top: 0, right: 0, bottom: 0, left: 0 }, //确定内边距
+                containerDimensions = { height: 150, width: 60 }, //确定整个svg的大小
+                chartDimensions = { //根据svg的大小和内边距确定条形图的大小
+                    height: containerDimensions.height - margin.top - margin.bottom,
+                    width: containerDimensions.width - margin.left - margin.right
+                }
+            //获得svg
+            const svg = d3.select('#count_') //获得网页中svg元素
+                .attr('width', containerDimensions.width) //设置svg的高
+                .attr('height', containerDimensions.height) //设置svg的宽
+            //.style('background', 'white') //设置背景颜色
+
+            const group = svg.append('g') //改变后面绘制的坐标原点
+                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                .attr('id', 'g1');
+
+            //设置比例尺
+            const y = d3.scaleLinear()
+                .domain([0, 15])
+                .nice()//扩展定义域的两段使其都为整数，比如[1.0021, 2.999] => [1, 3]
+                .range([0, chartDimensions.width])
+
+            const x = d3.scaleBand()
+                .domain(array.map(d => d.time))
+                .range([chartDimensions.height, 0])
+                .padding(0.2)  //设置条之间的间距，通过改变每一个条的宽度来实现
+
+            //绘制条形
+            const bars = group.selectAll('rect') //选择关联的svg元素
+                .data(array) //需要关联的数据
+                .join('rect') //获得绑定了数据的rect元素
+            bars.attr('x', d => 0) //设置rect的x坐标
+                .attr('y', d => x(d.time))//设置rect的y坐标
+                .attr('height', x.bandwidth())//设置rect的width
+                .attr('width', d => y(d.count) - y(0))//设置rect的width, 已经被比例尺计算好了，通过x.bandwidth()获得
+                .attr('fill', 'yellow') //设置颜色
+                .on("mouseover", function (d, i) {
+                    d3.select(this)
+                        .attr("fill", "rgb(212, 200, 210)")
+
+                })
+                .on("mouseout", function (d, i) {
+                    d3.select(this)
+                        .transition()
+                        .duration(500)
+                        .attr("fill", "yellow");
+                })
+            bars.append("title")
+                .text(d => data[0].player + "在" + d.time + "分钟之后的五分钟内进球总数为" + d.count);
+        }
+    </script>
+</head>
+
+<body>
+    <div id="windo">
+        <p>Thank you for viewing our website,what we want to show is the Score comparison between Messi and Ronaldo in
+            the
+            Champions League.Our page is showed by five parts:</p>
+        <p>The first part is on the top.By clicking the left button you can reset the page and the right button can read
+            this introduction again.</p>
+        <p>Next is the second part:with the left image is Ronaldo and right image is Messi, bar chart on both sides of
+            the
+            center box is telling the number of goals scored after the opening 90 minutes.You can see the details by
+            hovering over the mouse.By clicking the images,you can see the highlight data about this person.</p>
+        <p>The third part is mainly the line and bar charts in the middle.The line charts shows the total number of
+            goals
+            scored by the two players over time and the bar charts shows the number of goals scored on a specific date.
+        </p>
+        <p>The forth part is composed of two rose diagrams on the left and right and creative scatter diagrams in the
+            middle.The rose diagram is showing the scores of specific kicking styles and the scatter diagram is showing
+            the
+            corresponding scores in every season. By clicking the specific kicking style,you can see the rest of the
+            charts
+            changing accordingly.</p>
+        <p>The last part of this page is showing jump buttons to another radar chart,you can acquire more information by
+            clicking.</p>
+        <div><button id="windo_btn">Read over</button></div>
+    </div>
+    <div id="title">
+        <div id="reset">reset</div>
+        <h2>Score Comparison Between Messi and Ronaldo</h2>
+        <div id="intro">introduction</div>
+    </div>
+    <div id="title_pos">
+    </div>
+    <div class="out">
+
+        <!-- 头像和中间的框 -->
+        <div id="one">
+            <img src="./4.jpg" alt="" id="r" style="left:45px; display: block; border-radius: 50%;">
+            <div class="box">
+                <svg id='count2'></svg>
+                <div id="left">
+                    <span style="font-size:1.8rem; font-weight: 700;">Ronaldo</span>
+                    <span style="font-size:2.8rem; font-weight: 700;" id="num1">123</span>
+                    <span>162 games</span>
+                    <span>0.76 goal per game</span>
+                </div>
+                <div id="right">
+                    <span style="font-size:1.8rem; font-weight: 700;">Messi</span>
+                    <span style="font-size:2.8rem; font-weight: 700;" id="num2">112</span>
+                    <span>134 games</span>
+                    <span>0.84 goal per game</span>
+                </div>
+                <svg id='count_'></svg>
+            </div>
+            <img src="5.jpg" alt="" id="m" style="right:45px;display: block; border-radius: 50%;">
+        </div>
+        <div id="detail_top">
+            <b style="color:rgb(245, 121, 123)">Tips:</b> &nbsp;Before checking the visualizations below, clicking on
+            the button <b style="color:rgb(209, 209, 152)">at the top right of the page</b> will help you read a lot
+        </div>
+        <!-- 背影 -->
+        <div id="two">
+            <img src="./left.jpg" alt=""
+                style="left:30px;height: 280px;width:225px; display: block; border-radius: 10%;">
+            <!-- <svg style="width:600px;height:270px;position:absolute;border-radius: 30px; border:2px solid lightyellow;" id="zhexiantiaoxing"></svg> -->
+            <iframe style="width:610px;height:270px; background-color: rgba(201, 199, 199, 0.329);margin:0 auto"
+                id="childframe" src="可视化/test.html"></iframe>
+            <img src="./right.jpg" alt=""
+                style="right:30px;height: 280px;width:225px;display: block; border-radius: 10%;">
+        </div>
+        <div id="three">
+            <!-- 玫瑰图和中间的图 -->
+            <svg style="width:270px;height:350px;position:absolute;left:50px;margin-top:0px;z-index:1" id="svg1"></svg>
+            <svg style="width:310px;height:350px;position:absolute;right:0px;margin-top:0px;z-index:1" id="svg2">
+                <g></g>
+            </svg>
+            <div id="under">
+                <!-- 高度的计算：初始为30px，递增为15px  比如1->3，递增30px，最后高度为60px,
+            即计算公式为： (top-under)*15+30 -->
+                <!-- bottom的计算：初始为0，递增为15px，则最下面是2时，bottom为15px，最下面为3时，bottom为30px，即(under-1)*15 -->
+                <div class="line" style="position: absolute;left: 2px;">
+                    <div class="outer" style="height:30px; bottom:0">
+                        <div class="balll orange" style="position: absolute;">1</div>
+                        <div class="ballr orange" style="position: absolute;">1</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:45px;" id="tem">
+                    <div class="outer" style="height:60px; bottom:0">
+                        <div class="balll blue" style="position: absolute;">3</div>
+                        <div class="ballr orange" style="position: absolute;">1</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:88px;">
+                    <div class="outer" style="height:60px; bottom:75px">
+                        <div class="balll blue" style="position: absolute;">8</div>
+                        <div class="ballr orange" style="position: absolute;">6</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:131px;">
+                    <div class="outer" style="height:105px; bottom:45px">
+                        <div class="balll orange" style="position: absolute;">9</div>
+                        <div class="ballr blue" style="position: absolute;">4</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:174px;">
+                    <div class="outer" style="height:45px; bottom:90px">
+                        <div class="balll orange" style="position: absolute;">8</div>
+                        <div class="ballr blue" style="position: absolute;">7</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:217px;">
+                    <div class="outer" style="height:120px; bottom:75px">
+                        <div class="balll orange" style="position: absolute;">12</div>
+                        <div class="ballr blue" style="position: absolute;">6</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:260px;">
+                    <div class="outer" style="height:90px; bottom:135px">
+                        <div class="balll orange" style="position: absolute;">14</div>
+                        <div class="ballr blue" style="position: absolute;">10</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:303px;">
+                    <div class="outer" style="height:90px; bottom:105px">
+                        <div class="balll blue" style="position: absolute;">12</div>
+                        <div class="ballr orange" style="position: absolute;">8</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:346px;">
+                    <div class="outer" style="height:165px; bottom:105px">
+                        <div class="balll blue" style="position: absolute;">17</div>
+                        <div class="ballr orange" style="position: absolute;">8</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:389px;">
+                    <div class="outer" style="height:30px; bottom:135px">
+                        <div class="balll" style="position: absolute;">10</div>
+                        <div class="ballr red" style="position: absolute;">10</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:432px;">
+                    <div class="outer" style="height:180px; bottom:75px">
+                        <div class="balll blue" style="position: absolute;">16</div>
+                        <div class="ballr orange" style="position: absolute;">6</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:475px;">
+                    <div class="outer" style="height:45px; bottom:150px">
+                        <div class="balll blue" style="position: absolute;">12</div>
+                        <div class="ballr orange" style="position: absolute;">11</div>
+                    </div>
+                </div>
+                <div class="line" style="position: absolute; left:518px;">
+                    <div class="outer" style="height:120px; bottom:75px">
+                        <div class="balll blue" style="position: absolute;">12</div>
+                        <div class="ballr orange" style="position: absolute;">6</div>
+                    </div>
+                </div>
+                <div class="line"
+                    style="position: absolute; left:561px;border-right: 1.5px solid rgb(200, 200, 200); width: 43px; ">
+                    <div class="outer" style="height:120px; bottom:75px">
+                        <div class="balll orange" style="position: absolute;">12</div>
+                        <div class="ballr blue" style="position: absolute;">6</div>
+                    </div>
+                </div>
+                <ul>
+                    <li>2005</li>
+                    <li>2006</li>
+                    <li>2007</li>
+                    <li>2008</li>
+                    <li>2009</li>
+                    <li>2010</li>
+                    <li>2011</li>
+                    <li>2012</li>
+                    <li>2013</li>
+                    <li>2014</li>
+                    <li>2015</li>
+                    <li>2016</li>
+                    <li>2017</li>
+                    <li style="border-right: 1.5px solid rgb(200, 200, 200);">2018</li>
+                </ul>
+                <ul>
+                    <li>2006</li>
+                    <li>2007</li>
+                    <li>2008</li>
+                    <li>2009</li>
+                    <li>2010</li>
+                    <li>2011</li>
+                    <li>2012</li>
+                    <li>2013</li>
+                    <li>2014</li>
+                    <li>2015</li>
+                    <li>2016</li>
+                    <li>2017</li>
+                    <li>2018</li>
+                    <li style="border-right: 1.5px solid rgb(200, 200, 200);">2019</li>
+                </ul>
+            </div>
+        </div>
+        <div id="four">
+            <div id="detail">
+                Want to know more details? Click the button <b>below</b> and view the <b
+                    style="color:rgb(225, 87, 89)">ability radar chart</b> of two players annually !
+            </div>
+            <div id="content">
+                <div onclick="window.location.href='./RadarChart/fifa07.html'">2007</div>
+                <div onclick="window.location.href='RadarChart/fifa08.html'">2008</div>
+                <div onclick="window.location.href='RadarChart/fifa09.html'">2009</div>
+                <div onclick="window.location.href='RadarChart/fifa10.html'">2010</div>
+                <div onclick="window.location.href='RadarChart/fifa11.html'">2011</div>
+                <div onclick="window.location.href='RadarChart/fifa12.html'">2012</div>
+                <div onclick="window.location.href='RadarChart/fifa13.html'">2013</div>
+                <div onclick="window.location.href='RadarChart/fifa14.html'">2014</div>
+                <div onclick="window.location.href='RadarChart/fifa15.html'">2015</div>
+                <div onclick="window.location.href='RadarChart/fifa16.html'">2016</div>
+                <div onclick="window.location.href='RadarChart/fifa17.html'">2017</div>
+                <div onclick="window.location.href='RadarChart/fifa18.html'">2018</div>
+                <div onclick="window.location.href='RadarChart/fifa19.html'">2019</div>
+                <div onclick="window.location.href='RadarChart/fifa20.html'">2020</div>
+                <div onclick="window.location.href='RadarChart/fifa21.html'">2021</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        d3.csv("time_cl2.csv").then(function (csvdata) {
+            drawBarChart_ronaldo(csvdata.filter(function (d) { return d.player == 'ronaldo' }))
+            drawBarChart_messi(csvdata.filter(function (d) { return d.player == 'messi' }))
+        })
+        let r = document.getElementById("r");
+        let m = document.getElementById("m");
+        let btn = document.getElementById("btn");
+        let num1 = document.getElementById("num1"); //ronaldo的总分数
+        let num2 = document.getElementById("num2"); //messi的总分数
+        let left = document.getElementById("left"); //ronaldo的蓝色框
+        let right = document.getElementById("right"); //messi的橘色框
+        let outer = document.getElementsByClassName("outer");
+        let reset = document.getElementById('reset');
+        let windo_btn = document.getElementById('windo_btn');
+        let windo = document.getElementById('windo');
+        let intro = document.getElementById('intro');
+
+        //生成饼状图布局
+        var pie = d3.pie().value(function (d) { return d });
+        var sex = [1, 1, 1, 1, 1];
+        var cont = ['Right-foot', 'Head', 'Free kick', 'Penalty', 'Left-foot'];
+        var way1 = [55, 24, 12, 15, 17];
+        var way2 = [17, 4, 5, 12, 74];
+
+
+        //传递到子html的参数
+        var player = ["messi", "ronaldo", "both"];
+        var type = ["Right-footed shot", "Header", "Penalty", "Direct free kick", "Left-footed shot", "all"];
+        var pi = 2;
+        var ti = 5;
+
+
+        var is_clickr = false;
+        var is_clickm = false;
+
+        //生成弧度的路径
+        let radius = 80;
+        var path = d3.arc().outerRadius(radius).innerRadius(0);
+        var text_path = d3.arc().outerRadius(radius + 55).innerRadius(0);
+
+        var g1 = d3.select("#svg1").append("g")
+            .attr("transform", "translate(90,170)");
+        var g2 = d3.select("#svg2").append("g")
+            .attr("transform", "translate(210,230)");
+
+        var arc1 = g1.selectAll("arc")
+            .data(pie(sex))
+            .enter()
+            .append("g");
+        var arc2 = g2.selectAll("arc")
+            .data(pie(sex))
+            .enter()
+            .append("g");
+
+        arc1.append("path")
+            .attr("d", d3.arc().innerRadius(0).outerRadius(function (d) {
+                return way1[d.index] * 3
+            }))
+            .attr("stroke", "grey")
+            .attr("stroke-width", 2)
+            .attr("fill", "rgba(45, 47, 48,0.82)");
+
+        arc2.append("path")
+            .attr("d", d3.arc().innerRadius(0).outerRadius(function (d) {
+                return way2[d.index] * 3
+            }))
+            .attr("stroke", "grey")
+            .attr("stroke-width", 2)
+            .attr("fill", "rgba(214, 175, 0, 0.82)");
+
+        arc1.append("text")
+            .attr("transform", function (d) {
+                return "translate(" + text_path.centroid(d) + ")";
+            })
+            //让文字居中！！  这个属性要记住
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .text(function (d, i) {
+                return cont[i];
+            });
+
+        arc2.append("text")
+            .attr("transform", function (d) {
+                return "translate(" + text_path.centroid(d) + ")";
+            })
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .text(function (d, i) {
+                return cont[i];
+            });
+
+        // function create_path(t) {
+        //     return d3.arc().outerRadius(way[t] * 4).innerRadius(0);
+        // }
+
+        //点击左边的玫瑰图时
+        let arc_click = function (d, i) {
+            let tem1 = way1[i];
+            let tem2 = way2[i];
+            num1.innerText = tem1;
+            num2.innerText = tem2;
+
+            //把数据小的那一方flexGrow改为0
+            if (tem1 > tem2) {
+                right.style.flexGrow = 0;
+            } else {
+                left.style.flexGrow = 0;
+            }
+        }
+
+        //记录当前显示的是哪种方式的进球数
+        let log1 = -1;
+        let log2 = -1;
+
+
+        arc1.on("click", function (d, i) {
+
+            //先恢复为原状，否则无法进行之后的修改（因为不恢复成1的话，多改几次就都成0了
+            left.style.flexGrow = 1;
+            right.style.flexGrow = 1;
+
+            //如果上次不是该元素，那就改成该元素，否则就恢复原状
+            if (log1 !== i) {
+                arc_click(d, i);
+                log1 = i;
+
+            } else {
+                log1 = -1;
+                num1.innerText = 123;
+                num2.innerText = 112;
+            }
+            if (log1 == -1) {
+                d3.csv("time_cl2.csv").then(function (csvdata) {
+
+                    drawBarChart_ronaldo(csvdata.filter(function (d) {
+
+                        return d.player == 'ronaldo'
+                    }))
+                    drawBarChart_messi(csvdata.filter(function (d) { return d.player == 'messi' }))
+
+                })
+                document.getElementById("childframe").contentWindow.drawpicture();
+
+                if (d.index == 0) {
+                    dx();
+                }
+                if (d.index == 1) {
+                    testa();
+                }
+                if (d.index == 2) {
+                    rig();
+                }
+                if (d.index == 3) {
+                    pun();
+                }
+                if (d.index == 4) {
+                    sx();
+                }
+
+
+            } else {
+                djmgt(i);
+                if (d.index == 0) {
+                    dx();
+                }
+                if (d.index == 1) {
+                    testa();
+                }
+                if (d.index == 2) {
+                    rig();
+                }
+                if (d.index == 3) {
+                    pun();
+                }
+                if (d.index == 4) {
+                    sx();
+                }
+            }
+
+        })
+
+
+        //同arc1
+        arc2.on("click", function (d, i) {
+            console.log("click m");
+            left.style.flexGrow = 1;
+            right.style.flexGrow = 1;
+            if (log2 !== i) {
+                arc_click(d, i);
+                log2 = i;
+
+            } else {
+                log2 = -1;
+                num1.innerText = 123;
+                num2.innerText = 112;
+            }
+
+
+            if (log2 == -1) {
+                d3.csv("time_cl2.csv").then(function (csvdata) {
+                    drawBarChart_ronaldo(csvdata.filter(function (d) { return d.player == 'ronaldo' }))
+                    drawBarChart_messi(csvdata.filter(function (d) { return d.player == 'messi' }))
+                    document.getElementById("childframe").contentWindow.drawpicture();
+                })
+                if (d.index == 0) {
+                    dx();
+                }
+                if (d.index == 1) {
+                    testa();
+                }
+                if (d.index == 2) {
+                    rig();
+                }
+                if (d.index == 3) {
+                    pun();
+                }
+                if (d.index == 4) {
+                    sx();
+                }
+            } else {
+                djmgt(i);
+                if (d.index == 0) {
+                    dx();
+                }
+                if (d.index == 1) {
+                    testa();
+                }
+                if (d.index == 2) {
+                    rig();
+                }
+                if (d.index == 3) {
+                    pun();
+                }
+                if (d.index == 4) {
+                    sx();
+                }
+            }
+
+        })
+
+
+
+        arc1.on("mouseover", function () {
+            this.style.cursor = "pointer";
+            console.log(this)
+
+        })
+        arc2.on("mouseover", function () {
+            this.style.cursor = "pointer"
+        })
+
+        //改变点击颜色
+        arc1.on("mousedown", function () {
+            this.children[0].style.fill = "rgb(170, 201, 211)";
+        })
+        arc2.on("mousedown", function () {
+            this.children[0].style.fill = "rgb(212, 200, 210)"
+        })
+        arc1.on("mouseup", function () {
+            this.children[0].style.fill = "rgba(45, 47, 48,0.82)"
+            // if (is_clickr) {
+            //     this.children[0].style.fill = "rgb(20,20,20)"
+            // }
+        })
+        arc2.on("mouseup", function () {
+            this.children[0].style.fill = "rgba(214, 175, 0, 0.82)"
+
+        })
+
+
+
+        // 鼠标覆盖到图片上，图片变化
+
+        r.onmouseover = function () {
+            r.style.border = "3px solid black";
+        }
+        r.onmouseleave = function () {
+            r.style.border = "";
+        }
+        m.onmouseover = function () {
+            m.style.border = "3px solid black";
+        }
+        m.onmouseleave = function () {
+            m.style.border = "";
+        }
+
+
+        // 点击C罗头像，梅西的部分变浅
+
+        r.onclick = function () {
+            if (is_clickr) {
+                is_clickr = false;
+                recover_blue();
+                document.getElementById("childframe").contentWindow.recover_highlight();
+                return;
+            }
+            is_clickr = true;
+            if (is_clickm) {
+                is_clickm = false;
+                change_ball_style();
+            }
+            change_blue();
+            document.getElementById("childframe").contentWindow.highlight("ronaldo");
+        }
+
+
+
+        // 点击梅西头像，C罗的部分变浅
+
+        m.onclick = function () {
+            if (is_clickm) {
+                is_clickm = false;
+                recover_orange();
+                document.getElementById("childframe").contentWindow.recover_highlight();
+                return;
+            }
+            is_clickm = true;
+            if (is_clickr) {
+                is_clickr = false;
+                change_ball_style();
+            }
+            change_orange();
+            document.getElementById("childframe").contentWindow.highlight("messi");
+        }
+
+
+        // 当其中一人高亮时，点击另一人头像，要先返回total状态，再返回当前状态
+
+        function change_ball_style() {
+            r.style.filter = "";
+            m.style.filter = "";
+            if (ball_style_now === 'dx') {
+                total(); //执行一次total为了改变ball_style_now
+                dx();
+            }
+            if (ball_style_now === 'sx') {
+                total();
+                sx();
+            }
+            if (ball_style_now === 'testa') {
+                total();
+                testa();
+            }
+            if (ball_style_now === 'pun') {
+                total();
+                pun();
+            }
+            if (ball_style_now === 'rig') {
+                total();
+                rig();
+            }
+            if (ball_style_now === '') {
+                total();
+            }
+        }
+
+
+
+        function change_blue() {
+            r.style.filter = "drop-shadow(10px 10px 10px rgba(255,255,255,1))";
+            right.style.backgroundColor = "rgba(214, 175, 0, 0.22)";
+            left.style.backgroundColor = "rgb(20,20,20)";
+
+            //修改玫瑰图的fill色
+            for (let i = 0; i < 5; i++) {
+                arc2._groups[0][i].childNodes[0].style.fill = "rgba(214, 175, 0, 0.22)";
+                arc2._groups[0][i].childNodes[0].style.stroke = "grey";
+                arc1._groups[0][i].childNodes[0].style.fill = "rgb(20,20,20)";
+                arc1._groups[0][i].childNodes[0].style.stroke = "white";
+            }
+
+            for (let i = 0; i < outer.length; i++) {
+                if (outer[i].childNodes[1].classList.contains('orange')) {
+                    outer[i].childNodes[1].classList.remove('orange')
+                    outer[i].childNodes[1].classList.add('orange_less')
+                }
+                if (outer[i].childNodes[3].classList.contains('orange')) {
+                    outer[i].childNodes[3].classList.remove('orange')
+                    outer[i].childNodes[3].classList.add('orange_less')
+                }
+                if (outer[i].childNodes[1].classList.contains('blue')) {
+                    outer[i].childNodes[1].classList.remove('blue')
+                    outer[i].childNodes[1].classList.add('blue_more')
+                }
+                if (outer[i].childNodes[3].classList.contains('blue')) {
+                    outer[i].childNodes[3].classList.remove('blue')
+                    outer[i].childNodes[3].classList.add('blue_more')
+                }
+            }
+        }
+
+        function recover_blue() {
+            r.style.filter = "";
+            right.style.backgroundColor = "rgba(214, 175, 0, 0.82)";
+            left.style.backgroundColor = "rgba(45, 47, 48,0.82)";
+
+            //修改玫瑰图的fill色
+            for (let i = 0; i < 5; i++) {
+                arc2._groups[0][i].childNodes[0].style.fill = "rgba(214, 175, 0, 0.82)";
+                arc1._groups[0][i].childNodes[0].style.fill = "rgba(45, 47, 48,0.82)";
+                arc1._groups[0][i].childNodes[0].style.stroke = "grey";
+            }
+
+            for (let i = 0; i < outer.length; i++) {
+                if (outer[i].childNodes[1].classList.contains('orange_less')) {
+                    outer[i].childNodes[1].classList.remove('orange_less')
+                    outer[i].childNodes[1].classList.add('orange')
+                }
+                if (outer[i].childNodes[3].classList.contains('orange_less')) {
+                    outer[i].childNodes[3].classList.remove('orange_less')
+                    outer[i].childNodes[3].classList.add('orange')
+                }
+                if (outer[i].childNodes[1].classList.contains('blue_more')) {
+                    outer[i].childNodes[1].classList.remove('blue_more')
+                    outer[i].childNodes[1].classList.add('blue')
+                }
+                if (outer[i].childNodes[3].classList.contains('blue_more')) {
+                    outer[i].childNodes[3].classList.remove('blue_more')
+                    outer[i].childNodes[3].classList.add('blue')
+                }
+            }
+        }
+
+        function change_orange() {
+            m.style.filter = "drop-shadow(10px 10px 10px rgba(255,255,255,1))";
+            right.style.backgroundColor = "rgb(220,200,2)";
+            left.style.backgroundColor = "rgba(20,20, 20,0.3)";
+
+            //修改玫瑰图的fill色
+            for (let i = 0; i < 5; i++) {
+                arc1._groups[0][i].childNodes[0].style.fill = "rgba(20,20,20,0.3)";
+                arc1._groups[0][i].childNodes[0].style.stroke = "grey";
+                arc2._groups[0][i].childNodes[0].style.fill = "rgb(220,200,3)";
+                arc2._groups[0][i].childNodes[0].style.stroke = "white";
+            }
+
+            for (let i = 0; i < outer.length; i++) {
+                if (outer[i].childNodes[1].classList.contains('orange')) {
+                    outer[i].childNodes[1].classList.remove('orange')
+                    outer[i].childNodes[1].classList.add('orange_more')
+                }
+                if (outer[i].childNodes[3].classList.contains('orange')) {
+                    outer[i].childNodes[3].classList.remove('orange')
+                    outer[i].childNodes[3].classList.add('orange_more')
+                }
+                if (outer[i].childNodes[1].classList.contains('blue')) {
+                    outer[i].childNodes[1].classList.remove('blue')
+                    outer[i].childNodes[1].classList.add('blue_less')
+                }
+                if (outer[i].childNodes[3].classList.contains('blue')) {
+                    outer[i].childNodes[3].classList.remove('blue')
+                    outer[i].childNodes[3].classList.add('blue_less')
+                }
+            }
+        }
+
+
+
+        function recover_orange() {
+            m.style.filter = "";
+            right.style.backgroundColor = "rgba(214, 175, 0, 0.82)";
+            left.style.backgroundColor = "rgba(45, 47, 48,0.82)";
+
+            //修改玫瑰图的fill色
+            for (let i = 0; i < 5; i++) {
+                arc2._groups[0][i].childNodes[0].style.fill = "rgba(214, 175, 0, 0.82)";
+                arc1._groups[0][i].childNodes[0].style.fill = "rgba(45, 47, 48,0.82)";
+                arc1._groups[0][i].childNodes[0].style.stroke = "grey";
+            }
+
+            for (let i = 0; i < outer.length; i++) {
+                if (outer[i].childNodes[1].classList.contains('orange_more')) {
+                    outer[i].childNodes[1].classList.remove('orange_more')
+                    outer[i].childNodes[1].classList.add('orange')
+                }
+                if (outer[i].childNodes[3].classList.contains('orange_more')) {
+                    outer[i].childNodes[3].classList.remove('orange_more')
+                    outer[i].childNodes[3].classList.add('orange')
+                }
+                if (outer[i].childNodes[1].classList.contains('blue_less')) {
+                    outer[i].childNodes[1].classList.remove('blue_less')
+                    outer[i].childNodes[1].classList.add('blue')
+                }
+                if (outer[i].childNodes[3].classList.contains('blue_less')) {
+                    outer[i].childNodes[3].classList.remove('blue_less')
+                    outer[i].childNodes[3].classList.add('blue')
+                }
+            }
+        }
+
+
+
+        // 散点图
+
+        //记录一下当前展示的是哪种方式的进球
+        let ball_style_now = '';
+
+        //进球方式为dx的图
+        function dx() {
+            lrecover_fill();
+            if (ball_style_now == 'dx') {
+                total();
+                arc1._groups[0][0].childNodes[1].style.fill='white'
+                arc2._groups[0][0].childNodes[1].style.fill='white'
+                ball_style_now = '';
+                return;
+            }
+            ball_style_now = 'dx';
+            arc1._groups[0][0].childNodes[1].style.fill='coral'
+            arc2._groups[0][0].childNodes[1].style.fill='coral'
+
+            let dx_height = [0, 30, 30, 30, 45, 45, 30, 150, 30, 75, 135, 30, 75, 60];
+            let dx_bottom = [0, 15, 0, 15, 0, 15, 60, 0, 105, 15, 0, 105, 0, 0];
+            let dx_lc = ['t', 'blue', 'red', 'red', 'blue', 'blue', 'blue', 'blue', 'blue', 'orange', 'blue', 'blue', 'blue', 'orange'];
+            let dx_rc = ['t', 't', 'red', 'red', 'orange', 'orange', 't', 'orange', 't', 'blue', 'orange', 't', 'orange', 'blue'];
+            let dx_lt = ['', 2, 1, 2, 2, 3, 5, 9, 8, 5, 8, 8, 4, 3];
+            let dx_rt = ['', 2, 1, 2, 1, 2, 5, 1, 8, 2, 1, 8, 1, 1];
+
+
+            for (let i = 0; i < outer.length; i++) {
+                outer[i].style.height = dx_height[i] + 'px';
+                outer[i].style.bottom = dx_bottom[i] + 'px';
+                ball_remove(i);
+
+                outer[i].childNodes[1].classList.add(dx_lc[i]);
+                outer[i].childNodes[3].classList.add(dx_rc[i]);
+                outer[i].childNodes[1].innerText = dx_lt[i];
+                outer[i].childNodes[3].innerText = dx_rt[i];
+
+                if (is_clickr) {
+                    change_blue();
+                }
+
+                if (is_clickm) {
+                    change_orange();
+                }
+            }
+        }
+
+
+
+        //进球方式为sx的图
+        function sx() {
+            lrecover_fill();
+            if (ball_style_now == 'sx') {
+                total();
+                arc1._groups[0][4].childNodes[1].style.fill='white'
+                arc2._groups[0][4].childNodes[1].style.fill='white'
+                ball_style_now = '';
+                return;
+            }
+            ball_style_now = 'sx';
+            arc1._groups[0][4].childNodes[1].style.fill='coral'
+            arc2._groups[0][4].childNodes[1].style.fill='coral'
+
+            let sx_height = [30, 30, 75, 30, 90, 150, 150, 90, 45, 75, 75, 150, 45, 30];
+            let sx_bottom = [0, 0, 0, 75, 15, 0, 0, 15, 45, 0, 0, 0, 30, 75];
+            let sx_lc = ['orange', 'orange', 'orange', 'orange', 'blue', 'blue', 'blue', 'blue', 'blue', 'orange', 'blue', 'blue', 'blue', 'orange'];
+            let sx_lt = [1, 1, 4, 6, 6, 9, 9, 6, 5, 4, 4, 9, 4, 6];
+            let sx_rt = [1, 1, 1, 6, 2, 1, 1, 2, 4, 1, 1, 1, 3, 6];
+
+            for (let i = 0; i < outer.length; i++) {
+                outer[i].style.height = sx_height[i] + 'px';
+                outer[i].style.bottom = sx_bottom[i] + 'px';
+                ball_remove(i);
+                outer[i].childNodes[1].innerText = sx_lt[i];
+                outer[i].childNodes[3].innerText = sx_rt[i];
+                outer[i].childNodes[1].classList.add('orange');
+                if (i === 0 || i === 1 || i === 3 || i === 13) {
+                    outer[i].childNodes[3].classList.add('orange');
+                } else {
+                    outer[i].childNodes[3].classList.add('blue');
+                }
+            }
+
+            if (is_clickr) {
+                change_blue();
+            }
+
+            if (is_clickm) {
+                change_orange();
+            }
+        }
+
+
+
+        //进球方式为testa的图
+        function testa() {
+            lrecover_fill();
+            if (ball_style_now == 'testa') {
+                total();
+                ball_style_now = '';
+                arc1._groups[0][1].childNodes[1].style.fill='white'
+                arc2._groups[0][1].childNodes[1].style.fill='white'
+                return;
+            }
+            ball_style_now = 'testa';
+            arc1._groups[0][1].childNodes[1].style.fill='coral'
+            arc2._groups[0][1].childNodes[1].style.fill='coral'
+
+            let tx_height = [0, 30, 30, 30, 0, 0, 30, 30, 30, 75, 30, 30, 30, 30];
+            let tx_bottom = [0, 0, 45, 0, 0, 0, 0, 0, 15, 0, 30, 15, 15, 45];
+            let tx_lc = ['t', 'blue', 'blue', 'red', 't', 't', 'orange', 'red', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue'];
+            let tx_rc = ['t', 'blue', 'blue', 'red', 't', 't', 't', 'red', 'blue', 'orange', 'blue', 'blue', 'blue', 'blue'];
+            let tx_lt = ['', 1, 4, 1, '', '', 1, 1, 2, 4, 3, 2, 2, 4];
+            let tx_rt = ['', 1, 4, 1, '', '', 1, 1, 2, 1, 3, 2, 2, 4];
+
+            for (let i = 0; i < outer.length; i++) {
+                outer[i].style.height = tx_height[i] + 'px';
+                outer[i].style.bottom = tx_bottom[i] + 'px';
+                ball_remove(i);
+                outer[i].childNodes[1].innerText = tx_lt[i];
+                outer[i].childNodes[3].innerText = tx_rt[i];
+                outer[i].childNodes[1].classList.add(tx_lc[i]);
+                outer[i].childNodes[3].classList.add(tx_rc[i]);
+            }
+
+            if (is_clickr) {
+                change_blue();
+            }
+
+            if (is_clickm) {
+                change_orange();
+            }
+        }
+
+
+
+        //进球方式为pun的图
+        function pun() {
+            lrecover_fill();
+            if (ball_style_now == 'pun') {
+                total();
+                arc1._groups[0][3].childNodes[1].style.fill='white'
+                arc2._groups[0][3].childNodes[1].style.fill='white'
+                ball_style_now = '';
+                return;
+            }   
+            ball_style_now = 'pun';
+            arc1._groups[0][3].childNodes[1].style.fill='coral'
+            arc2._groups[0][3].childNodes[1].style.fill='coral'
+
+            let tx_height = [0, 0, 30, 30, 60, 30, 30, 0, 30, 0, 30, 30, 30, 30];
+            let tx_bottom = [0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 15, 0, 0, 15];
+            let tx_lc = ['t', 't', 'blue', 'blue', 'blue', 'blue', 'blue', 't', 'red', 't', 'blue', 'blue', 'orange', 'orange'];
+            let tx_rc = ['t', 't', 'blue', 'blue', 'orange', 'blue', 'blue', 't', 'red', 't', 'blue', 'blue', 't', 't'];
+            let tx_lt = ['', '', 1, 1, 3, 1, 2, '', 1, '', 2, 1, 1, 2];
+            let tx_rt = ['', '', 1, 1, 1, 1, 2, '', 1, '', 2, 1, 1, 2];
+
+            for (let i = 0; i < outer.length; i++) {
+                outer[i].style.height = tx_height[i] + 'px';
+                outer[i].style.bottom = tx_bottom[i] + 'px';
+                ball_remove(i);
+                outer[i].childNodes[1].innerText = tx_lt[i];
+                outer[i].childNodes[3].innerText = tx_rt[i];
+                outer[i].childNodes[1].classList.add(tx_lc[i]);
+                outer[i].childNodes[3].classList.add(tx_rc[i]);
+            }
+
+            if (is_clickr) {
+                change_blue();
+            }
+
+            if (is_clickm) {
+                change_orange();
+            }
+        }
+
+
+        //进球方式为rig的图
+        function rig() {
+            lrecover_fill();
+            if (ball_style_now == 'rig') {
+                total();
+                ball_style_now = '';
+                arc1._groups[0][2].childNodes[1].style.fill='white'
+                arc2._groups[0][2].childNodes[1].style.fill='white'
+                return;
+            }
+            ball_style_now = 'rig';
+            arc1._groups[0][2].childNodes[1].style.fill='coral'
+            arc2._groups[0][2].childNodes[1].style.fill='coral'
+
+            let tx_height = [0, 0, 30, 0, 0, 30, 60, 0, 30, 30, 45, 30, 30, 30];
+            let tx_bottom = [0, 0, 0, 0, 0, 0, 15, 0, 15, 30, 0, 15, 30, 0];
+            let tx_lc = ['t', 't', 'red', 't', 't', 'red', 'orange', 't', 'red', 'blue', 'blue', 'orange', 'blue', 'red'];
+            let tx_rc = ['t', 't', 'red', 't', 't', 'red', 'blue', 't', 'red', 'blue', 'orange', 't', 'blue', 'red'];
+            let tx_lt = ['', '', 1, '', '', 1, 4, '', 2, 3, 2, 2, 3, 1];
+            let tx_rt = ['', '', 1, '', '', 1, 2, '', 2, 3, 1, 2, 3, 1];
+
+            for (let i = 0; i < outer.length; i++) {
+                outer[i].style.height = tx_height[i] + 'px';
+                outer[i].style.bottom = tx_bottom[i] + 'px';
+                ball_remove(i);
+                outer[i].childNodes[1].innerText = tx_lt[i];
+                outer[i].childNodes[3].innerText = tx_rt[i];
+                outer[i].childNodes[1].classList.add(tx_lc[i]);
+                outer[i].childNodes[3].classList.add(tx_rc[i]);
+            }
+
+            if (is_clickr) {
+                change_blue();
+            }
+
+            if (is_clickm) {
+                change_orange();
+            }
+        }
+
+
+
+        //进球方式为total的图
+        function total() {
+            // if (ball_style_now == 'total') {
+            //     location.reload();
+            //     ball_style_now = '';
+            //     return;
+            // }
+            ball_style_now = '';
+
+            let tox_height = [30, 60, 60, 105, 45, 120, 90, 90, 165, 30, 180, 45, 120, 120];
+            let tox_bottom = [0, 0, 75, 45, 90, 75, 135, 105, 105, 135, 75, 150, 75, 75];
+            let tox_lc = ['orange', 'blue', 'blue', 'orange', 'orange', 'orange', 'orange', 'blue', 'blue', 'red', 'blue', 'blue', 'blue', 'orange'];
+            let tox_rc = ['orange', 'orange', 'orange', 'blue', 'blue', 'blue', 'blue', 'orange', 'orange', 'red', 'orange', 'orange', 'orange', 'blue'];
+            let tox_lt = [1, 3, 8, 9, 8, 12, 14, 12, 17, 10, 16, 12, 12, 12];
+            let tox_rt = [1, 1, 6, 4, 7, 6, 10, 8, 8, 10, 6, 11, 6, 6];
+
+            for (let i = 0; i < outer.length; i++) {
+                outer[i].style.height = tox_height[i] + 'px';
+                outer[i].style.bottom = tox_bottom[i] + 'px';
+                ball_remove(i);
+                outer[i].childNodes[1].innerText = tox_lt[i];
+                outer[i].childNodes[3].innerText = tox_rt[i];
+                outer[i].childNodes[1].classList.add(tox_lc[i]);
+                outer[i].childNodes[3].classList.add(tox_rc[i]);
+            }
+
+            if (is_clickr) {
+                change_blue();
+            }
+
+            if (is_clickm) {
+                change_orange();
+            }
+        }
+
+
+        //在为上面或下面的球添加颜色之前，先删掉之前的颜色，否则会因为优先级无法上色    
+        function ball_remove(i) {
+
+            outer[i].childNodes[1].classList.remove('orange');
+            outer[i].childNodes[1].classList.remove('blue');
+            outer[i].childNodes[1].classList.remove('red');
+            outer[i].childNodes[1].classList.remove('t');
+            outer[i].childNodes[3].classList.remove('orange');
+            outer[i].childNodes[3].classList.remove('blue');
+            outer[i].childNodes[3].classList.remove('red');
+            outer[i].childNodes[3].classList.remove('t');
+
+            outer[i].childNodes[1].classList.remove('orange_less');
+            outer[i].childNodes[1].classList.remove('blue_more');
+            outer[i].childNodes[1].classList.remove('orange_more');
+            outer[i].childNodes[1].classList.remove('blue_less');
+            outer[i].childNodes[3].classList.remove('orange_less');
+            outer[i].childNodes[3].classList.remove('blue_more');
+            outer[i].childNodes[3].classList.remove('orange_more');
+            outer[i].childNodes[3].classList.remove('blue_less');
+        }
+
+        lrecover_fill=function(){
+            for (let i = 0; i < 5; i++) {
+                arc1._groups[0][i].childNodes[1].style.fill = "white";
+                arc2._groups[0][i].childNodes[1].style.fill = "white";
+            }
+        }
+        rrecover_fill=function(){
+            for (let i = 0; i < 5; i++) {
+                arc1._groups[0][i].childNodes[1].style.fill='white'
+                arc2._groups[0][i].childNodes[1].style.fill='white'
+            }
+        }
+
+
+        reset.onclick = function () {
+            location.reload();
+        }
+
+        windo_btn.onclick = function () {
+            windo.style = "display:none"
+        }
+
+        intro.onclick = function () {
+            windo.style = "display:block"
+        }
+
+    </script>
+</body>
+
+</html>

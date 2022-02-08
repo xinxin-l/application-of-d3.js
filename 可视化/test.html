@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .messi {}
+
+    .ronaldo {}
+  </style>
+  <!-- Code from d3-graph-gallery.com -->
+
+  <meta charset="utf-8">
+
+  <!-- Load d3.js -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> <!-- 指定文件的兼容性 -->
+
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script>
+    function drawpicture() {
+      d3.select("#my_dataviz")
+        .selectAll("svg")
+        .remove();
+      var rectWidth = 2;
+
+
+      var parseTime = d3.timeParse("%Y/%m/%d");
+
+
+      // set the dimensions and margins of the graph
+      var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+        width = 550 - margin.left - margin.right,
+        height = 240 - margin.top - margin.bottom;
+
+      // append the svg object to the body of the page
+      var svg = d3.select("#my_dataviz")
+        .append("svg")
+        .attr("width", 550)
+        .attr("height", 240)
+        .append("g")
+        .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+      //Read the data  折线图部分
+      d3.csv("filter.csv", function (data) {
+
+
+        // group the data: I want to draw one line per group
+
+        // group the data: I want to draw one line per group
+        var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
+          .key(function (d) { return d.name; })
+          .entries(data);
+
+        // Add X axis --> it is a date format
+        var x = d3.scaleTime()//scaleLinear
+          .domain(d3.extent(data, function (d) { return parseTime(d.date); }))
+          .range([0, width]);
+        //var x = d3.scaleTime().range([0, width]);
+        //var y = d3.scaleLinear().range([height, 0]);
+
+        //x.domain(d3.extent(data, function(d) { return d.date; }));
+        //y.domain([0, d3.max(data, function(d) { return d.score; })]);
+
+
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          //不用折线图 的坐标轴
+          .call(d3.axisBottom(x))
+          .selectAll("text")
+          //.attr("transform", "translate(-10,0)rotate(-45)")
+          .attr("fill", 'white')
+          .style("text-anchor", "end");
+        //这三行让文字倾斜，可以直接去掉（就显示横平竖直的文字）
+        //.select(".domain")
+        //.remove();
+
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([0, d3.max(data, function (d) { return +d.score; })])
+          .range([height, 0]);
+        svg.append("g")
+          .call(d3.axisLeft(y))
+          .selectAll("text")
+          .attr("fill", 'white');
+
+        // color palette
+        var res = sumstat.map(function (d) { return d.key }) // list of group names
+        var color = d3.scaleOrdinal()
+          .domain(res)
+          .range(['#daa520', '#000000'])
+        //,'#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'
+        // Draw the line
+        svg.selectAll(".line")
+          .data(sumstat)
+          .enter()
+          .append("path")
+          .attr("class", function (d) { return d.key + "1"; })
+          .attr("fill", "none")
+          .attr("stroke", function (d) {
+            if (d.key == "messi") {
+              return "rgba(197, 165, 22)";
+            } else {
+              return "rgba(31, 32, 32, 0.82)";
+            }
+          })
+          .attr("stroke-width", 4)
+          .attr("d", function (d) {
+            return d3.line()
+              .x(function (d) { return x(parseTime(d.date)); })
+              .y(function (d) { return y(+d.score); })
+              (d.values)
+          });
+
+
+      })
+
+
+      //条形，分两部分，分别画出
+      d3.csv("messi-sumtime.csv", function (data) {
+
+        var x = d3.scaleTime()
+          .range([0, width])
+          //.domain(data.map(function(d) { return d.Country; }))
+          .domain(d3.extent(data, function (d) { return parseTime(d.date); }))
+
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([0, 15])
+          .range([height, 0]);
+        //svg.append("g")
+        //  .call(d3.axisLeft(y));//改成在画面右边
+
+        // Bars
+        svg.selectAll("mybar")
+          .data(data)
+          .enter()
+          .append("rect")
+          .attr("class", 'messi')
+          .attr("x", function (d) { return x(parseTime(d.date)); })
+          .attr("y", function (d) { return y(d.score); })
+          .attr("width", rectWidth)
+          .attr("height", function (d) { return height - y(d.score); })
+          .attr("fill", "#daa520");
+
+      })
+
+
+      // 另一个人的条形
+      d3.csv("ronaldo-sumtime.csv", function (data) {
+
+        // X axis
+        //var x = d3.scaleBand()
+        var x = d3.scaleTime()
+          .range([0, width])
+          //.domain(data.map(function(d) { return d.Country; }))
+          .domain(d3.extent(data, function (d) { return parseTime(d.date); }))
+
+        //y轴方向的线
+        var liney = svg.append("line").attr("x1", 840).attr("y1", 0)
+          .attr("x2", 840).attr("y2", 500)
+          .attr("stroke", "white")
+          .attr("stroke-width", "0.5");
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([0, 15])
+          .range([height, 0]);
+        //svg.append("g")
+        //  .call(d3.axisRight(y));
+
+        // Bars
+        svg.selectAll("mybar")
+          .data(data)
+          .enter()
+          .append("rect")
+          .attr("class", 'ronaldo')
+          .attr("x", function (d) { return x(parseTime(d.date)); })
+          .attr("y", function (d) { return y(d.score); })
+          .attr("width", rectWidth)
+          .attr("height", function (d) { return height - y(d.score); })
+          .attr("fill", '#000000')
+          //.attr("stroke", "white")
+          //.attr("stroke-width", "0.5")
+
+          .on("mouseover", function () {
+            d3.select(this)
+              .attr("fill", "coral");
+          })
+          //(2)鼠标离开时恢复，利用之前学习的动画慢慢过渡
+          .on("mouseout", function (d) {
+            d3.select(this)
+              .transition()
+              .duration(250)
+              .attr("fill", '#000000');
+          });
+      })
+
+    }
+    function drawpicture2(a, b) {
+
+      d3.select("#my_dataviz")
+        .selectAll("svg")
+        .remove();
+      var rectWidth = 2;
+
+
+      var parseTime = d3.timeParse("%Y/%m/%d");
+
+
+      // set the dimensions and margins of the graph
+      var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+        width = 550 - margin.left - margin.right,
+        height = 240 - margin.top - margin.bottom;
+
+      // append the svg object to the body of the page
+      var svg = d3.select("#my_dataviz")
+        .append("svg")
+        .attr("width", 550)
+        .attr("height", 240)
+        .append("g")
+        .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+      //Read the data  折线图部分
+      d3.csv("折线图/" + b + ".csv", function (data) {
+        // group the data: I want to draw one line per group
+        var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
+          .key(function (d) { return d.player; })
+          .entries(data);
+
+        // Add X axis --> it is a date format
+        var x = d3.scaleTime()//scaleLinear
+          .domain(d3.extent(data, function (d) { return parseTime(d.date); }))
+          .range([0, width]);
+
+
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x))
+          .selectAll("text")
+          .attr("fill", 'white')
+
+
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([0, d3.max(data, function (d) { return +d.sum; })])
+          .range([height, 0]);
+        svg.append("g")
+          .call(d3.axisLeft(y))
+          .selectAll("text")
+          .attr("fill", 'white');
+
+        // color palette
+        var res = sumstat.map(function (d) { return d.key }) // list of group players
+        var color = d3.scaleOrdinal()
+          .domain(res)
+          .range(['#daa520', '#000000'])
+        //,'#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'
+        // Draw the line
+        svg.selectAll(".line")
+          .data(sumstat)
+          .enter()
+          .append("path")
+          .attr("class", function (d) { return d.key + "1"; })
+          .attr("fill", "none")
+          .attr("stroke", function (d) {
+            if (d.key == "messi") {
+              if (a == "messi") {
+                return "rgb(220,210,3)"
+              } else if (a == "ronaldo") {
+                return "rgba(214, 175, 0, 0.3)";
+              }
+              return "rgba(197, 165, 22)";
+            } else {
+              if (a == "messi") {//头像为梅西
+                return "rgba(36, 37, 37, 0.22)";
+              } else if (a == "ronaldo") {
+                return "rgb(20,20,20)";
+              }
+              return "rgba(31, 32, 32, 0.82)";
+            }
+          })
+          .attr("stroke-width", 4)
+          .attr("d", function (d) {
+            return d3.line()
+              .x(function (d) { return x(parseTime(d.date)); })
+              .y(function (d) { return y(+d.sum); })
+              (d.values)
+          });
+
+      })
+
+
+      d3.csv("sum_time.csv", function (data) {
+        parseTime = d3.timeParse("%m/%d/%Y");
+        var x = d3.scaleBand()
+        data1 = data.filter(function (d) {
+          return d.player == "messi";
+        }).filter(function (d) {
+          return d.type == b
+        })
+        data2 = data.filter(function (d) {
+          return d.player == "ronaldo";
+        }).filter(function (d) {
+          return d.type == b
+        })
+        data3 = data.filter(function (d) {
+          return d.type == b
+        })
+        var x = d3.scaleTime()
+          .range([0, width])
+          .domain(d3.extent(data3, function (d) { return parseTime(d.date); }))
+        var y = d3.scaleLinear()
+          .domain([0, 15])
+          .range([height, 0]);
+
+        // Bars\
+        svg.selectAll("mybar")
+          .data(data1)
+          .enter()
+          .append("rect")
+          .attr("class", 'messi')
+          .attr("x", function (d) {
+
+            return x(parseTime(d.date));
+          })
+          .attr("y", function (d) { return y(d.score); })
+          .attr("width", rectWidth)
+          .attr("height", function (d) { return height - y(d.score); })
+          .attr("fill", function (d) {
+            if (a == "messi") {
+              return "rgb(220,210,3)"
+            } else if (a == "ronaldo") {
+              return "rgba(214, 175, 0, 0.3)";
+            }
+            return "#daa520";
+          })
+
+        svg.selectAll("mybar")
+          .data(data2)
+          .enter()
+          .append("rect")
+          .attr("class", 'ronaldo')
+          .attr("x", function (d) {
+            return x(parseTime(d.date));
+          })
+          .attr("y", function (d) { return y(d.score); })
+          .attr("width", rectWidth)
+          .attr("height", function (d) { return height - y(d.score); })
+          .attr("fill", function () {
+            if (a == "messi") {
+              return "rgba(36, 37, 37, 0.22)"
+            } else if (a == "ronaldo") {
+              return "rgb(20,20,20)";
+            }
+            return "#black";
+          })
+      })
+
+      console.log("drawpicture");
+    }
+
+    function highlight(player) {
+
+      if (player == "messi") {
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.messi')
+          .attr("fill", "rgb(220,210,3)");
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.messi1')
+          .attr("stroke", "rgb(220,210,3)");
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.ronaldo')
+          .attr("fill", "rgba(36, 37, 37, 0.22)")
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.ronaldo1')
+          .attr("stroke", "rgba(36, 37, 37, 0.22)")
+      } else {
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.messi')
+          .attr("fill", "rgba(214, 175, 0, 0.3)");
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.ronaldo')
+          .attr("fill", "rgb(20,20,20)")
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.messi1')
+          .attr("stroke", "rgba(214, 175, 0, 0.3)");
+        d3.select("#my_dataviz")
+          .select("svg")
+          .selectAll('.ronaldo1')
+          .attr("stroke", "rgb(20,20,20)");
+      }
+      console.log("highlight " + player)
+    }
+    function recover_highlight() {
+
+      d3.select("#my_dataviz")
+        .select("svg")
+        .selectAll('.messi')
+        .attr("fill", "#daa520");
+      d3.select("#my_dataviz")
+        .select("svg")
+        .selectAll('.ronaldo')
+        .attr("fill", "#black")
+      d3.select("#my_dataviz")
+        .select("svg")
+        .selectAll('.messi1')
+        .attr("stroke", "rgba(197, 165, 22)");
+      d3.select("#my_dataviz")
+        .select("svg")
+        .selectAll('.ronaldo1')
+        .attr("stroke", "rgba(31, 32, 32, 0.82)");
+      console.log("recover_highlight")
+    }
+
+  </script>
+</head>
+
+<!-- Create a div where the graph will take place -->
+
+<body>
+  <div id="my_dataviz"></div>
+
+
+  <script>
+    drawpicture();
+  </script>
+</body>
+
+</html>
