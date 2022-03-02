@@ -9,6 +9,8 @@
 
 **雷达图**需要通过页面最下方的年份按钮跳转，然后展现出来的是表示二人各种能力值的雷达对比图
 
+### 访问链接
+https://xinxin-l.github.io/application-of-d3.js/test.html
 
 
 ### 静态页面如下
